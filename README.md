@@ -1,1 +1,1 @@
-# test
+# Zabbix scripts and templates

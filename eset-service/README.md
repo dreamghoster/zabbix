@@ -1,0 +1,1 @@
+Template for controlling status of Eset products on Windows machine. Watching for Eset product and Eset management agent services and generate a trigger if one (or both) are not running.

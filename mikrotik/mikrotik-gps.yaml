@@ -1,0 +1,58 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:45:47Z'
+  groups:
+    -
+      uuid: 4918b88734c54bd094cff7585b5d71fc
+      name: 'Templates/Network Devices'
+  templates:
+    -
+      uuid: 56ffc25517864e8b94b84867d971f201
+      template: 'Mikrotik GPS'
+      name: 'Mikrotik GPS'
+      groups:
+        -
+          name: 'Templates/Network Devices'
+      items:
+        -
+          uuid: e2305d22287943669f9383b49876eb3d
+          name: 'GPS Altitude'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.14988.1.1.12.4.0
+          key: system.gps.altitude
+          trends: '0'
+          value_type: CHAR
+        -
+          uuid: 6ef60abe46004c4ca57d0f582341f914
+          name: 'GPS Latitude'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.14988.1.1.12.3.0
+          key: system.gps.latitude
+          trends: '0'
+          value_type: CHAR
+          inventory_link: LOCATION_LAT
+        -
+          uuid: 02b17c5896d5455e8985592e9fd52592
+          name: 'GPS Longitude'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.14988.1.1.12.2.0
+          key: system.gps.longitude
+          trends: '0'
+          value_type: CHAR
+          inventory_link: LOCATION_LON
+        -
+          uuid: 3b6f4eff2aac4e0b80da1f6c88153681
+          name: 'GPS Satellites'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.14988.1.1.12.6.0
+          key: system.gps.satellites
+          trends: '0'
+          value_type: CHAR
+        -
+          uuid: f9475082faa6440fa756bdcecb2c4a8b
+          name: 'GPS Speed'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.14988.1.1.12.5.0
+          key: system.gps.speed
+          trends: '0'
+          value_type: CHAR

@@ -1,0 +1,528 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:44:57Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: c11928155f5c46d4afe66ceb2334eaa3
+      template: MegaRaid
+      name: MegaRaid
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: af96fe9503e544f2918981dcdbf51f95
+          name: 'Adapters discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,adp]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: 013ef4305fa84950af4a234ce22c5f1f
+              name: 'Adapter {#ADPNUMBER}: adapter name'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",adp,name]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Product\sName)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+            -
+              uuid: 3c1975053d004101b0840e0fe017924b
+              name: 'Adapter {#ADPNUMBER}: adapter ROC temperature'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",adp,temp]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(ROC\stemperature)\s+[:]\s+([0-9]+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'No sensor'
+              master_item:
+                key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+            -
+              uuid: 2badd24476d84feea56e96d2316ae6f1
+              name: 'Adapter {#ADPNUMBER}: battery replacement required'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,repl]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Battery\sReplacement\srequired)\s+[:]\s+(.+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'BBU Absent'
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 7cd71446db2b44c0a858618014f544fc
+                  expression: 'find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,repl],,"like","No")=0 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,repl],,"like","Absent")=0'
+                  name: 'Adapter #{#ADPNUMBER} require battery replacement'
+                  priority: HIGH
+            -
+              uuid: 277409239b034e1cb498e47090845ed3
+              name: 'Adapter {#ADPNUMBER}: battery state'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Battery\sState)[:]\s+(.+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'BBU Absent'
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 78275c12ef2c49eda0b9f59bb76fdcbc
+                  expression: 'find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,state],,"like","Optimal")=0 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,state],,"like","Absent")=0'
+                  name: 'Adapter #{#ADPNUMBER} battery state is not optimal'
+                  priority: HIGH
+            -
+              uuid: 92f835f6b4b7480baf4ee6b0250d89de
+              name: 'Adapter {#ADPNUMBER}: battery temperature state'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,tempstate]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Temperature)\s+[:]\s+(.+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'BBU Absent'
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: c22205786c8e48a691341484e7c8b3ad
+                  expression: 'find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,tempstate],,"like","OK")=0 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,tempstate],,"like","Absent")=0'
+                  name: 'Adapter #{#ADPNUMBER} battery temperature state is not optimal'
+                  priority: HIGH
+            -
+              uuid: 4bf0b679f91e4f52b2f82dc11026cbfc
+              name: 'Adapter {#ADPNUMBER}: battery temperature'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,temp]'
+              delay: '0'
+              units: C
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Temperature)[:]\s+(.+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'BBU Absent'
+                -
+                  type: REGEX
+                  parameters:
+                    - '([0-9]+)'
+                    - \1
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'BBU Absent'
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: f807bbad655547bdb3ceedfb28192325
+                  expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,temp])>30'
+                  name: 'Adapter #{#ADPNUMBER} battery temperature is critical'
+                  priority: DISASTER
+                  dependencies:
+                    -
+                      name: 'Adapter #{#ADPNUMBER} battery temperature is critical'
+                      expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,temp])>40'
+                -
+                  uuid: 2b43d0c5eb1a42eba64809c38a34d893
+                  expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,temp])>40'
+                  name: 'Adapter #{#ADPNUMBER} battery temperature is critical'
+                  priority: DISASTER
+            -
+              uuid: 01cf96b0d6e045129a30ef32cc5967d7
+              name: 'Adapter {#ADPNUMBER}: adapter status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+            -
+              uuid: eb98cce5f28449168e5754bb4e517b1a
+              name: 'Adapter {#ADPNUMBER}: battery status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+          trigger_prototypes:
+            -
+              uuid: 45df56b4d7974b29877e7f2f0375fef0
+              expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",adp,temp])>80 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,state],,"like","Absent")=0'
+              name: 'Adapter #{#ADPNUMBER} ROC temperature is critical'
+              priority: DISASTER
+            -
+              uuid: d39f181c985f43948e6263e14d14d3f6
+              expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",adp,temp])>70 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,state],,"like","Absent")=0'
+              name: 'Adapter #{#ADPNUMBER} ROC temperature is high'
+              priority: HIGH
+              dependencies:
+                -
+                  name: 'Adapter #{#ADPNUMBER} ROC temperature is critical'
+                  expression: 'last(/MegaRaid/megaraid["{#ADPNUMBER}",adp,temp])>80 and find(/MegaRaid/megaraid["{#ADPNUMBER}",bbu,state],,"like","Absent")=0'
+        -
+          uuid: 0afdb2ae4de54bc78f930274886c4a99
+          name: 'Physical disks discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,phys]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: 836d10b6b7bc45df81f1d3d710b38edc
+              name: '{#PHYSDRIVE}: Predictive Failure Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",failurecount]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Predictive\sFailure\sCount)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: e08c040b6f9b4daf9255b71d2ec7dba5
+                  expression: 'last(/MegaRaid/megaraid["{#PHYSDRIVE}",failurecount])>0'
+                  name: '{#PHYSDRIVE} has predictive failure errors'
+                  priority: HIGH
+            -
+              uuid: ea80c67abc204c5881ecd3f8397d141e
+              name: '{#PHYSDRIVE}: Inquiry Data'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",inquiry]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Inquiry\sData)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: fe6cb9ee9c0048898602250c26081056
+                  expression: '(last(/MegaRaid/megaraid["{#PHYSDRIVE}",inquiry],#1)<>last(/MegaRaid/megaraid["{#PHYSDRIVE}",inquiry],#2))=1'
+                  name: '{#PHYSDRIVE} inquiry data changed'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+            -
+              uuid: 7ffb91b1f1684a1ea469f101e08e9930
+              name: '{#PHYSDRIVE}: Media Error Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",mediaerror]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Media\sError\sCount)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 524e9fa03c84416aa6dd2a3571e3a65d
+                  expression: 'last(/MegaRaid/megaraid["{#PHYSDRIVE}",mediaerror])>0'
+                  name: '{#PHYSDRIVE} has media errors'
+                  priority: HIGH
+            -
+              uuid: 9e1c4c073f4341739ad4a1ed36d1da65
+              name: '{#PHYSDRIVE}: Other Error Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",othererror]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Other\sError\sCount)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: a201ad62909b49e9a602017f8230ea71
+                  expression: 'change(/MegaRaid/megaraid["{#PHYSDRIVE}",othererror])>15'
+                  name: '{#PHYSDRIVE} has other errors'
+                  priority: HIGH
+            -
+              uuid: 3395223acbf84786aa83d643aa1eb08d
+              name: '{#PHYSDRIVE}: S.M.A.R.T. alert'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",smart]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(S\.M\.A\.R\.T\salert)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 3336a0f90bf04bf2a41b3e86bae625d3
+                  expression: 'find(/MegaRaid/megaraid["{#PHYSDRIVE}",smart],,"like","No")=0'
+                  name: '{#PHYSDRIVE} has flagged as S.M.A.R.T. alert'
+                  priority: HIGH
+            -
+              uuid: 59f11cd2dc9f4542acd96fbfade5d7ea
+              name: '{#PHYSDRIVE}: Firmware state'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Firmware\sstate)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 16b0a5eabdc64246aaba8155afd25ac0
+                  expression: |
+                    find(/MegaRaid/megaraid["{#PHYSDRIVE}",state],,"like","Online")=0 and find(/MegaRaid/megaraid["{#PHYSDRIVE}",state],,"like","Hotspare")=0 and 
+                    find(/MegaRaid/megaraid["{#PHYSDRIVE}",state],,"like","JBOD")=0
+                  name: '{#PHYSDRIVE} state is not online'
+                  priority: DISASTER
+            -
+              uuid: a4ac0cedee724a2fabc0bc7a2a14e9f5
+              name: '{#PHYSDRIVE}: Temperature'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",temperature]'
+              delay: '0'
+              units: C
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Drive\sTemperature).+[:](.+)\s[(]'
+                    - \2
+                -
+                  type: REGEX
+                  parameters:
+                    - '([0-9]+)'
+                    - \1
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: ab2be242bcf84275861674542c03e0f6
+                  expression: 'last(/MegaRaid/megaraid["{#PHYSDRIVE}",temperature])>60'
+                  name: '{#PHYSDRIVE} temperature is critical'
+                  priority: DISASTER
+                -
+                  uuid: dfdaf786dfe74b7eb359babeb8a02f9b
+                  expression: 'last(/MegaRaid/megaraid["{#PHYSDRIVE}",temperature])>50'
+                  name: '{#PHYSDRIVE} temperature is high'
+                  priority: DISASTER
+                  dependencies:
+                    -
+                      name: '{#PHYSDRIVE} temperature is critical'
+                      expression: 'last(/MegaRaid/megaraid["{#PHYSDRIVE}",temperature])>60'
+            -
+              uuid: 6bc8f7db044b44e1a1c14b5880639a70
+              name: '{#PHYSDRIVE}: status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+        -
+          uuid: d6a3304414d2417794cf9e52dd995239
+          name: 'Virtual disks discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,virt]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: d0aa5520843b4e47b634944911757a21
+              name: '{#VIRTDRIVE}: bad blocks'
+              type: DEPENDENT
+              key: 'megaraid["{#VIRTDRIVE}",badblocks]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Bad\sBlocks\sExist)[:]\s+(.+)'
+                    - \2
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: 'Not supported'
+              master_item:
+                key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 6dcd7a1a4f15477db07437ff0563b203
+                  expression: 'find(/MegaRaid/megaraid["{#VIRTDRIVE}",badblocks],,"like","No")=0 and find(/MegaRaid/megaraid["{#VIRTDRIVE}",badblocks],,"like","Not Supported")=0'
+                  name: '{#VIRTDRIVE} has bad blocks'
+                  priority: DISASTER
+            -
+              uuid: 2c36c5183b0848b6a903640d45bb372c
+              name: '{#VIRTDRIVE}: state'
+              type: DEPENDENT
+              key: 'megaraid["{#VIRTDRIVE}",state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(State).+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 33836e598daa4e5d9ee3f12b4fa9bd35
+                  expression: 'find(/MegaRaid/megaraid["{#VIRTDRIVE}",state],,"like","Optimal")=0'
+                  name: '{#VIRTDRIVE} state is not optimal'
+                  priority: DISASTER
+            -
+              uuid: abb455937d7443a49dfc63913ede0af7
+              name: '{#VIRTDRIVE}: status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal

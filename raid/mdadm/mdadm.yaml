@@ -1,0 +1,73 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:44:33Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 94fdf4b87322437b8fbd5660a5a08495
+      template: Mdadm
+      name: Mdadm
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 5bad354882ae4b1ba898ebfb0414d1c0
+          name: 'Virtual disks discovery'
+          type: ZABBIX_ACTIVE
+          key: 'mdadm[list]'
+          delay: 1h
+          lifetime: 14d
+          item_prototypes:
+            -
+              uuid: 1d42691f80154e2f97f13378dee446ad
+              name: 'Raid $3 disks failed count'
+              type: ZABBIX_ACTIVE
+              key: 'mdadm[get,fdevices,{#RAIDNAME}]'
+              delay: 1h
+              history: 10d
+              trends: 10d
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: f717fee6625d4c5bb77d77281eb6fc38
+                  expression: 'last(/Mdadm/mdadm[get,fdevices,{#RAIDNAME}])>0'
+                  name: 'Raid {#RAIDNAME} has FAILED drives'
+                  priority: AVERAGE
+            -
+              uuid: e97081b58ac74588a6bbe7e481296580
+              name: 'Raid $3 disks total count'
+              type: ZABBIX_ACTIVE
+              key: 'mdadm[get,rdevices,{#RAIDNAME}]'
+              delay: 1h
+              history: 10d
+              trends: 10d
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+            -
+              uuid: 8c6a76af81b846939522e4a4adbf756e
+              name: 'Raid $3 state'
+              type: ZABBIX_ACTIVE
+              key: 'mdadm[get,state,{#RAIDNAME}]'
+              delay: 1h
+              history: 10d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 4d3eadff8d4748cdafb1ea10340e2d4c
+                  expression: 'find(/Mdadm/mdadm[get,state,{#RAIDNAME}],,"regexp","^active")=0'
+                  name: 'Raid {#RAIDNAME} has FAILED state'
+                  priority: AVERAGE

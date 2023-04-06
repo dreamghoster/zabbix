@@ -1,0 +1,90 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:43:40Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 25b4a601dca74fcbb3418637db8b8adc
+      template: 'Eset service'
+      name: 'Eset service'
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: ed918aad7abe41d68a7b8f6dfbb93ba5
+          name: 'Eset service'
+          type: ZABBIX_ACTIVE
+          key: 'service.info[ekrn,state]'
+          delay: 10m
+          valuemap:
+            name: 'Service state'
+          tags:
+            -
+              tag: Application
+              value: Service
+            -
+              tag: Service
+              value: Eset
+          triggers:
+            -
+              uuid: a7498ce82aa24c51a653c6c2e476f0ce
+              expression: 'last(/Eset service/service.info[ekrn,state])<>0'
+              name: 'Eset Antivirus Product is not working'
+              priority: HIGH
+        -
+          uuid: 6378c8f15fac4275af25960631ca5e85
+          name: 'Eset Management Agent service'
+          type: ZABBIX_ACTIVE
+          key: 'service.info[EraAgentSvc,state]'
+          delay: 10m
+          valuemap:
+            name: 'Service state'
+          tags:
+            -
+              tag: Application
+              value: Service
+            -
+              tag: Service
+              value: Eset
+          triggers:
+            -
+              uuid: 97d3bb50b6484fcb8d70b70f03c16337
+              expression: 'last(/Eset service/service.info[EraAgentSvc,state])<>0'
+              name: 'Eset Management Agent is not working'
+              priority: HIGH
+      valuemaps:
+        -
+          uuid: 0981a34b36a9404784d9f607d58ee467
+          name: 'Service state'
+          mappings:
+            -
+              value: '0'
+              newvalue: running
+            -
+              value: '1'
+              newvalue: paused
+            -
+              value: '2'
+              newvalue: 'start pending'
+            -
+              value: '3'
+              newvalue: 'pause pending'
+            -
+              value: '4'
+              newvalue: 'continue pending'
+            -
+              value: '5'
+              newvalue: 'stop pending'
+            -
+              value: '6'
+              newvalue: stopped
+            -
+              value: '7'
+              newvalue: unknown
+            -
+              value: '255'
+              newvalue: 'no such service'

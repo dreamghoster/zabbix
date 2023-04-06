@@ -1,0 +1,15 @@
+Templates for Mikrotik Devices. Rely on preinstalled templates "Template Module Generic SNMPv2" and "Template Module ICMP Ping" for collection some device info. All Mikrotik-specific info collecting using discovery rules (because not all items available on all devices):
+- CPU 
+- Fans
+- LTE 
+- Memory info
+- Network interfaces 
+- Power Consumption
+- PSU Current and Voltage
+- Storage
+- System information
+- CPU temperature
+- Device temperature
+- PCB temperature
+- SFP modules (separate template)
+- GPS info (separate template)

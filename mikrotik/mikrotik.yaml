@@ -1,0 +1,870 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:45:22Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 7bb2af083cce4f4682fd56de7105066b
+      template: Mikrotik
+      name: Mikrotik
+      templates:
+        -
+          name: 'Mikrotik SFP-modules'
+        -
+          name: 'Template Module Generic SNMPv2'
+        -
+          name: 'Template Module Interfaces SNMPv2'
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 7b80da0840684a1b9610a7a1746c966d
+          name: 'CPU Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.25.3.3.1.1]'
+          key: hrProcessorLoad.discovery
+          delay: 1h
+          lifetime: 3d
+          description: 'HOST-RESOURCES-MIB::hrProcessorTable discovery'
+          item_prototypes:
+            -
+              uuid: 6ab40aa5357146c2916a406658df548a
+              name: '#{#SNMPINDEX}: CPU utilization'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.25.3.3.1.2.{#SNMPINDEX}'
+              key: 'system.cpu.util[hrProcessorLoad.{#SNMPINDEX}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The average, over the last minute, of the percentage of time that this processor was not idle.Implementations may approximate this one minute smoothing period if necessary.
+              tags:
+                -
+                  tag: Application
+                  value: CPU
+              trigger_prototypes:
+                -
+                  uuid: 0e0a200a5df240e48466314af02019b5
+                  expression: 'avg(/Mikrotik/system.cpu.util[hrProcessorLoad.{#SNMPINDEX}],5m)>{$CPU_UTIL_MAX}'
+                  name: '#{#SNMPINDEX}: High CPU utilization'
+                  priority: AVERAGE
+                  description: 'Last value: {ITEM.LASTVALUE1}.'
+          graph_prototypes:
+            -
+              uuid: 7c9cc8e963ce4ef29dd45a087cd508b9
+              name: '#{#SNMPINDEX}: CPU utilization'
+              ymin_type_1: FIXED
+              ymax_type_1: FIXED
+              graph_items:
+                -
+                  drawtype: GRADIENT_LINE
+                  color: 1A7C11
+                  item:
+                    host: Mikrotik
+                    key: 'system.cpu.util[hrProcessorLoad.{#SNMPINDEX}]'
+        -
+          uuid: 0cc8f1dfe1d34809bf419c436db823e5
+          name: 'Temperature Discovery CPU'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.11]'
+          key: mtxrHlProcessorTemperature.discovery
+          delay: 1h
+          lifetime: 3d
+          description: |
+            MIKROTIK-MIB::mtxrHlProcessorTemperature
+            Since temperature of CPU is not available on all Mikrotik hardware, this is done to avoid unsupported items.
+          item_prototypes:
+            -
+              uuid: 23946b7ca21541f49c818e5b90881ae6
+              name: 'CPU: Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.11.{#SNMPINDEX}'
+              key: 'sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: °C
+              description: |
+                MIB: MIKROTIK-MIB
+                (mtxrHlProcessorTemperature) Processor temperature in Celsius (degrees C). Might be missing in entry models (RB750, RB450G..)
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.1'
+              tags:
+                -
+                  tag: Application
+                  value: Temperature
+              trigger_prototypes:
+                -
+                  uuid: dc443af52dc248f8a783d8a3fdb0f700
+                  expression: 'avg(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)>{$TEMP_CRIT:"CPU"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)<{$TEMP_CRIT:"CPU"}-3'
+                  name: 'CPU: Temperature is above critical threshold: >{$TEMP_CRIT:"CPU"}'
+                  priority: HIGH
+                  description: |
+                    Last value: {ITEM.LASTVALUE1}.
+                    This trigger uses temperature sensor values as well as temperature sensor status if available
+                -
+                  uuid: 367a630a14cc45f08c187b94100ba4a4
+                  expression: 'avg(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)>{$TEMP_WARN:"CPU"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)<{$TEMP_WARN:"CPU"}-3'
+                  name: 'CPU: Temperature is above warning threshold: >{$TEMP_WARN:"CPU"}'
+                  priority: WARNING
+                  description: |
+                    Last value: {ITEM.LASTVALUE1}.
+                    This trigger uses temperature sensor values as well as temperature sensor status if available
+                  dependencies:
+                    -
+                      name: 'CPU: Temperature is above critical threshold: >{$TEMP_CRIT:"CPU"}'
+                      expression: 'avg(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)>{$TEMP_CRIT:"CPU"}'
+                      recovery_expression: 'max(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)<{$TEMP_CRIT:"CPU"}-3'
+                -
+                  uuid: 346e13335ca142908d2b91f483f3e081
+                  expression: 'avg(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)<{$TEMP_CRIT_LOW:"CPU"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Mikrotik/sensor.temp.value[mtxrHlProcessorTemperature.{#SNMPINDEX}],5m)>{$TEMP_CRIT_LOW:"CPU"}+3'
+                  name: 'CPU: Temperature is too low: <{$TEMP_CRIT_LOW:"CPU"}'
+                  priority: AVERAGE
+                  description: 'Last value: {ITEM.LASTVALUE1}.'
+        -
+          uuid: 9fccf8d818a5425b9028190dbb0683b2
+          name: 'LTE discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.4.1.14988.1.1.14.1.1.2,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18,{#IFTYPE},1.3.6.1.2.1.2.2.1.3]'
+          key: mtxrLTEModem.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#IFTYPE}'
+                value: ^1$
+                formulaid: B
+              -
+                macro: '{#IFNAME}'
+                value: ^lte
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 06644d0b4881440db23c7e6b2efe440b
+              name: 'LTE: Modem Access Technology ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.6.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.accesstech[{#IFNAME}]'
+              trends: '0'
+              value_type: FLOAT
+              valuemap:
+                name: 'LTE access technology'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 5f50af9c84c543c9a69f4c024e159951
+              name: 'LTE: Current Cell ID ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.5.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.curcellid[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 86b9407062384208a7a2508c10b1d51c
+              name: 'LTE: eNB ID ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.8.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.enbid[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 7dc1bd0cb89c443da3e75077593ee62a
+              name: 'LTE: IMEI ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.11.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.imei[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 34a98b22763a41f783200af6e0107e2b
+              name: 'LTE: IMSI ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.12.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.imsi[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: b99b7b9577174c1990d7d1c29ba64dd6
+              name: 'LTE: LAC ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.10.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.lac[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 1ff9d9872ac441e48bada38ef37dc318
+              name: 'LTE: Provider ({#IFNAME})'
+              type: DEPENDENT
+              key: 'mtxrLTEModem.provider[{#IFNAME}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              valuemap:
+                name: 'LTE Provider'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '^255([0-9]{2}).*$'
+                    - \1
+              master_item:
+                key: 'mtxrLTEModem.imsi[{#IFNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 5ef2f70a838245e79c3d56d11a8f51e4
+              name: 'LTE: RAT ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.14.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.rat[{#IFNAME}]'
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 1100043ac2c5454db8c066578ab81c2f
+              name: 'LTE: RSRP ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.4.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.rsrp[{#IFNAME}]'
+              trends: '0'
+              value_type: FLOAT
+              units: dBm
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: a7916a857f834d6fb340138a6f46d3dc
+              name: 'LTE: RSRQ ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.3.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.rsrq[{#IFNAME}]'
+              trends: '0'
+              value_type: FLOAT
+              units: dB
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 82bf59c51437438882f03bd9bc01fa47
+              name: 'LTE: RSSI ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.2.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.rssi[{#IFNAME}]'
+              trends: '0'
+              value_type: FLOAT
+              units: dBm
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 212872f2936641b4bffb0035ff3ecc1d
+              name: 'LTE: Sector ID ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.9.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.sectorid[{#IFNAME}]'
+              trends: '0'
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: edbfd6c43d75490c994210706b83ac12
+              name: 'LTE: SINR ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.7.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.sinr[{#IFNAME}]'
+              trends: '0'
+              value_type: FLOAT
+              units: dB
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+            -
+              uuid: 0b13f1d8992647d3a176dadefb5d2d5e
+              name: 'LTE: UICC ({#IFNAME})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.16.1.1.13.{#SNMPINDEX}'
+              key: 'mtxrLTEModem.uicc[{#IFNAME}]'
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: LTE
+        -
+          uuid: 7e409b8b175e475aa42b2677b9a08b4c
+          name: 'Storage Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.25.2.3.1.3,{#ALLOC_UNITS},1.3.6.1.2.1.25.2.3.1.4,{#STORAGE_TYPE},1.3.6.1.2.1.25.2.3.1.2]'
+          key: storage.discovery
+          delay: 1h
+          filter:
+            evaltype: OR
+            conditions:
+              -
+                macro: '{#STORAGE_TYPE}'
+                value: .+4$
+                formulaid: A
+              -
+                macro: '{#STORAGE_TYPE}'
+                value: .+hrStorageFixedDisk
+                formulaid: B
+          lifetime: 3d
+          description: 'HOST-RESOURCES-MIB::hrStorage discovery with storage filter'
+          item_prototypes:
+            -
+              uuid: 3e7da034d4864d078ba13a413e203c8e
+              name: 'Disk-{#SNMPINDEX}: Storage utilization'
+              type: CALCULATED
+              key: 'vfs.fs.pused[hrStorageSize.{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              params: '(last(//vfs.fs.used[hrStorageSize.{#SNMPINDEX}])/last(//vfs.fs.total[hrStorageSize.{#SNMPINDEX}]))*100'
+              description: 'Storage utilization in % for Disk-{#SNMPINDEX}'
+              tags:
+                -
+                  tag: Application
+                  value: Storage
+              trigger_prototypes:
+                -
+                  uuid: 5d5c42dfb48e40e4a2f7e91d218c24e2
+                  expression: 'avg(/Mikrotik/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],5m)>{$STORAGE_UTIL_CRIT}'
+                  name: 'Disk-{#SNMPINDEX}: Disk space is critically low'
+                  priority: AVERAGE
+                  description: 'Last value: {ITEM.LASTVALUE1}.'
+                -
+                  uuid: 06d677451c744c84b414b3b06c7e9f09
+                  expression: 'avg(/Mikrotik/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],5m)>{$STORAGE_UTIL_WARN}'
+                  name: 'Disk-{#SNMPINDEX}: Disk space is low'
+                  priority: WARNING
+                  description: 'Last value: {ITEM.LASTVALUE1}.'
+                  dependencies:
+                    -
+                      name: 'Disk-{#SNMPINDEX}: Disk space is critically low'
+                      expression: 'avg(/Mikrotik/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],5m)>{$STORAGE_UTIL_CRIT}'
+            -
+              uuid: b23ce76eca0f464494488742fa41cfea
+              name: 'Disk-{#SNMPINDEX}: Total space'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.25.2.3.1.5.{#SNMPINDEX}'
+              key: 'vfs.fs.total[hrStorageSize.{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              units: B
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The size of the storage represented by this entry, in
+                units of hrStorageAllocationUnits. This object is
+                writable to allow remote configuration of the size of
+                the storage area in those cases where such an
+                operation makes sense and is possible on the
+                underlying system. For example, the amount of main
+                memory allocated to a buffer pool might be modified or
+                the amount of disk space allocated to virtual memory
+                might be modified.
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1024'
+              tags:
+                -
+                  tag: Application
+                  value: Storage
+            -
+              uuid: 53e9eb249fc340a3b0105b3792aa19fa
+              name: 'Disk-{#SNMPINDEX}: Used space'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.25.2.3.1.6.{#SNMPINDEX}'
+              key: 'vfs.fs.used[hrStorageSize.{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              units: B
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The amount of the storage represented by this entry that is allocated, in units of hrStorageAllocationUnits.
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1024'
+              tags:
+                -
+                  tag: Application
+                  value: Storage
+        -
+          uuid: a0beda9c17b840af8c978df90dcedd9e
+          name: 'Temperature Discovery Device'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.device.temperature.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: ^temperature$
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 325bd122505b4a6c84f690a4e2aebb15
+              name: 'Device temperature'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.device.temperature[{#SNMPINDEX}]'
+              delay: 5m
+              history: 2w
+              units: °C
+              tags:
+                -
+                  tag: Application
+                  value: Temperature
+              trigger_prototypes:
+                -
+                  uuid: 42dc7e87250f43f298a4c83bf33fd1f8
+                  expression: 'last(/Mikrotik/system.device.temperature[{#SNMPINDEX}])>75'
+                  name: 'Device temperature is high on {HOST.NAME}'
+                  priority: AVERAGE
+        -
+          uuid: 16a2d3bf695b4c4e8fdc543c74307e05
+          name: 'Fan Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.fan.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: ^fan
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: a6be11869136484bb57c058dd4bb4f90
+              name: 'FAN #{{#SNMPVALUE}.regsub("fan([0-9]+).*", \1)}'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.fan[{#SNMPINDEX}]'
+              delay: 5m
+              units: rpm
+              tags:
+                -
+                  tag: Application
+                  value: General
+        -
+          uuid: 0ec639b2af5b4a22b9196fac0f163091
+          name: 'System Info'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.7.4]'
+          key: system.info.discovery
+          delay: 1h
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 6f343da12feb40f8b2b3c713a8917cc2
+              name: 'Firmware version'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.7.4.{#SNMPINDEX}'
+              key: 'system.discovery.firmware[{#SNMPINDEX}]'
+              delay: 1h
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: Inventory
+              trigger_prototypes:
+                -
+                  uuid: 819420d0af2a4794ac5607ae7de8cdf9
+                  expression: '(last(/Mikrotik/system.discovery.firmware[{#SNMPINDEX}],#1)<>last(/Mikrotik/system.discovery.firmware[{#SNMPINDEX}],#2))=1 and length(last(/Mikrotik/system.discovery.firmware[{#SNMPINDEX}]))>0'
+                  recovery_mode: NONE
+                  name: 'Firmware has changed'
+                  priority: INFO
+                  manual_close: 'YES'
+            -
+              uuid: f21320836ac74b2eb6813f0a85942f5a
+              name: 'Hardware model name'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.1.1.{#SNMPINDEX}'
+              key: 'system.discovery.model[{#SNMPINDEX}]'
+              delay: 1h
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: Inventory
+            -
+              uuid: 46c281bb62bb44b1befee54a06e8b4be
+              name: 'Operating system'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.4.4.{#SNMPINDEX}'
+              key: 'system.discovery.os[{#SNMPINDEX}]'
+              delay: 1h
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: Inventory
+            -
+              uuid: 117c39626fd245c699929e10fe2182ef
+              name: 'Hardware serial number'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.7.3.{#SNMPINDEX}'
+              key: 'system.discovery.serial[{#SNMPINDEX}]'
+              delay: 1h
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              tags:
+                -
+                  tag: Application
+                  value: Inventory
+              trigger_prototypes:
+                -
+                  uuid: b359a3cb486b4f04a2b9b544b3ec6fe6
+                  expression: '(last(/Mikrotik/system.discovery.serial[{#SNMPINDEX}],#1)<>last(/Mikrotik/system.discovery.serial[{#SNMPINDEX}],#2))=1 and length(last(/Mikrotik/system.discovery.serial[{#SNMPINDEX}]))>0'
+                  recovery_mode: NONE
+                  name: 'Device has been replaced (new serial number received)'
+                  priority: INFO
+                  manual_close: 'YES'
+        -
+          uuid: 6119022f71364495b8992f75a6c5b93b
+          name: Memory
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.2.1.25.2.3.1.3]'
+          key: system.memory.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPINDEX}'
+                value: '65536'
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: d3501e0a894f44d096040a9137805cdf
+              name: 'Total memory'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.25.2.3.1.5.{#SNMPINDEX}'
+              key: 'system.memory.total[{#SNMPINDEX}]'
+              delay: 3m
+              units: B
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1024'
+              tags:
+                -
+                  tag: Application
+                  value: Memory
+            -
+              uuid: c53f3224e3754419bb82a3b7f154d263
+              name: 'Used memory'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.25.2.3.1.6.{#SNMPINDEX}'
+              key: 'system.memory.used[{#SNMPINDEX}]'
+              delay: 3m
+              units: B
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1024'
+              tags:
+                -
+                  tag: Application
+                  value: Memory
+            -
+              uuid: b8cebefc73514910b8f4a22184bf7b9e
+              name: 'Memory utilization'
+              type: CALCULATED
+              key: 'system.memory.util[{#SNMPINDEX}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              params: '(last(//system.memory.used[{#SNMPINDEX}])/last(//system.memory.total[{#SNMPINDEX}]))*100'
+              tags:
+                -
+                  tag: Application
+                  value: Memory
+              trigger_prototypes:
+                -
+                  uuid: 441dfcf851594a5480e16f4374f1764d
+                  expression: 'last(/Mikrotik/system.memory.util[{#SNMPINDEX}])>90'
+                  name: 'Memory utilization is more than 90%'
+                  priority: AVERAGE
+        -
+          uuid: fbd1164314774887b9ec247179f70bbe
+          name: 'Temperature Discovery PCB'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.pcb.temperature.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: board-temperature
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 2f4efcf853914c9aadab88659b3b8dc4
+              name: 'Board temperature'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.board.temperature[{#SNMPINDEX}]'
+              delay: 5m
+              history: 2w
+              units: °C
+              tags:
+                -
+                  tag: Application
+                  value: Temperature
+              trigger_prototypes:
+                -
+                  uuid: 0f47c4ffdd5942b6b688b75a0d2d1362
+                  expression: 'last(/Mikrotik/system.board.temperature[{#SNMPINDEX}])>45'
+                  name: 'Board Temperature is high on {HOST.NAME}'
+                  priority: AVERAGE
+        -
+          uuid: 3bac740bb7f24298be5ba5d9d97591c2
+          name: 'Power Consumption'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.power.consumption.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: consumption
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 4d65dab59335481096f54205e4363128
+              name: 'Power Consumption'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.power.consumption[{#SNMPINDEX}]'
+              delay: 5m
+              history: 2w
+              value_type: FLOAT
+              units: W
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.1'
+              tags:
+                -
+                  tag: Application
+                  value: General
+        -
+          uuid: 2ca62f11739a4d06a48470e568f68798
+          name: 'PSU Current Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.psu.current.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: psu.-current
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: ae7a0e388b294cd0ad30cbf164fdec65
+              name: 'PSU #{{#SNMPVALUE}.regsub("psu([0-9]+).*", \1)} current'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.psu.current[{#SNMPINDEX}]'
+              delay: 5m
+              history: 2w
+              value_type: FLOAT
+              units: A
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.1'
+              tags:
+                -
+                  tag: Application
+                  value: General
+        -
+          uuid: 9f55375652e24153b1b27053cd588656
+          name: 'PSU Voltage Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},1.3.6.1.4.1.14988.1.1.3.100.1.2]'
+          key: system.psu.voltage.discovery
+          delay: 1h
+          filter:
+            conditions:
+              -
+                macro: '{#SNMPVALUE}'
+                value: psu.-voltage
+                formulaid: A
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: e268d7c8e11e445ab685af1e0433bcfa
+              name: 'PSU #{{#SNMPVALUE}.regsub("psu([0-9]+).*", \1)} voltage'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.14988.1.1.3.100.1.3.{#SNMPINDEX}'
+              key: 'system.psu.voltage[{#SNMPINDEX}]'
+              delay: 5m
+              history: 2w
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.1'
+              tags:
+                -
+                  tag: Application
+                  value: General
+      macros:
+        -
+          macro: '{$CPU_UTIL_MAX}'
+          value: '90'
+        -
+          macro: '{$MEMORY_UTIL_MAX}'
+          value: '90'
+        -
+          macro: '{$STORAGE_UTIL_CRIT}'
+          value: '95'
+        -
+          macro: '{$STORAGE_UTIL_WARN}'
+          value: '90'
+        -
+          macro: '{$TEMP_CRIT}'
+          value: '60'
+        -
+          macro: '{$TEMP_CRIT:"CPU"}'
+          value: '90'
+        -
+          macro: '{$TEMP_CRIT_LOW}'
+          value: '5'
+        -
+          macro: '{$TEMP_WARN}'
+          value: '50'
+        -
+          macro: '{$TEMP_WARN:"CPU"}'
+          value: '85'
+      valuemaps:
+        -
+          uuid: 86d45801c4e340b4b314ac0290bfedee
+          name: 'LTE access technology'
+          mappings:
+            -
+              value: '-1'
+              newvalue: unknown
+            -
+              value: '0'
+              newvalue: gsmcompact
+            -
+              value: '1'
+              newvalue: gsm
+            -
+              value: '2'
+              newvalue: utran
+            -
+              value: '3'
+              newvalue: egprs
+            -
+              value: '4'
+              newvalue: hdspa
+            -
+              value: '5'
+              newvalue: hsupa
+            -
+              value: '6'
+              newvalue: hsdpahsupa
+            -
+              value: '7'
+              newvalue: eutran
+        -
+          uuid: f5bd7ced05d7424894df322ade2cd564
+          name: 'LTE Provider'
+          mappings:
+            -
+              value: '01'
+              newvalue: Vodafone
+            -
+              value: '02'
+              newvalue: Kyivstar
+            -
+              value: '03'
+              newvalue: Kyivstar
+            -
+              value: '04'
+              newvalue: Intertelecom
+            -
+              value: '06'
+              newvalue: Lifecell
+            -
+              value: '07'
+              newvalue: 3Mob
+            -
+              value: '21'
+              newvalue: PeopleNet

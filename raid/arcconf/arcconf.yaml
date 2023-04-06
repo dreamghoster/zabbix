@@ -1,0 +1,444 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:18:08Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 549320aed0b245498d7c3eadb47b7d76
+      template: Arcconf
+      name: Arcconf
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 591931e26ac64a598e87806fe415c97c
+          name: 'Adapters discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,adp]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: f4494a87177e45dfad23d21aa9fb47c3
+              name: 'Adapter {#ADPNUMBER}: adapter name'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",adp,name]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Controller\sModel)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+            -
+              uuid: 9a668a3f713345aa8c8376cd18402d81
+              name: 'Adapter {#ADPNUMBER}: adapter ROC temperature'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",adp,temp]'
+              delay: '0'
+              trends: 90d
+              units: °C
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Temperature)\s+[:]\s+([0-9]+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 81e1ac352db5428098dad9162f6acdf8
+                  expression: 'last(/Arcconf/megaraid["{#ADPNUMBER}",adp,temp])>80'
+                  name: 'Adapter #{#ADPNUMBER} ROC temperature is critical'
+                  priority: DISASTER
+                -
+                  uuid: f0d548f8ff974e9895fd9ae59dc695e8
+                  expression: 'last(/Arcconf/megaraid["{#ADPNUMBER}",adp,temp])>70'
+                  name: 'Adapter #{#ADPNUMBER} ROC temperature is high'
+                  priority: HIGH
+                  dependencies:
+                    -
+                      name: 'Adapter #{#ADPNUMBER} ROC temperature is critical'
+                      expression: 'last(/Arcconf/megaraid["{#ADPNUMBER}",adp,temp])>80'
+            -
+              uuid: fe6f6bd2cf64429e96ccd70819705bcf
+              name: 'Adapter {#ADPNUMBER}: battery state'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Status\s+)[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: d5a27480164d4187a44adb476faecacb
+                  expression: 'find(/Arcconf/megaraid["{#ADPNUMBER}",bbu,state],,"like","Optimal")=0 and find(/Arcconf/megaraid["{#ADPNUMBER}",bbu,state],,"like","Changing")=0'
+                  name: 'Adapter #{#ADPNUMBER} battery state is not optimal'
+                  priority: HIGH
+            -
+              uuid: 49b6dadc1976419184119e57df173688
+              name: 'Adapter {#ADPNUMBER}: battery temperature state'
+              type: DEPENDENT
+              key: 'megaraid["{#ADPNUMBER}",bbu,tempstate]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Over\stemperature)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 12ac61b9666c4dc49aeb9b1a0cbe8278
+                  expression: 'find(/Arcconf/megaraid["{#ADPNUMBER}",bbu,tempstate],,"like","No")=0'
+                  name: 'Adapter #{#ADPNUMBER} battery temperature state is not optimal'
+                  priority: HIGH
+            -
+              uuid: b00c8d7b0b60413c8e4dc60ba93fe334
+              name: 'Adapter {#ADPNUMBER}: adapter status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,adp,{#ADPNUMBER}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+            -
+              uuid: d139fde45533409a89ba3654cdd69a6a
+              name: 'Adapter {#ADPNUMBER}: battery status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,bbu,{#ADPNUMBER}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+        -
+          uuid: ff3a5c7de3544839a318523b5ff31caf
+          name: 'Physical disks discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,phys]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: ac1df162aa064bf48e793e3c46773e07
+              name: '{#PHYSDRIVE}: Predictive Failure Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",failurecount]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Uncorrectable\sSector\sCount).*rawValue=\"(.+)\"'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 6e6bb2eb86ca47f583f00db8ddec7986
+                  expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",failurecount])>0'
+                  name: '{#PHYSDRIVE} has predictive failure errors'
+                  priority: HIGH
+            -
+              uuid: d981b6aa3b9a4b78b579e29987348b03
+              name: '{#PHYSDRIVE}: Inquiry Data'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",inquiry]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Model)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: ccfd8cc4b7b942e380a3700a4774836f
+                  expression: '(last(/Arcconf/megaraid["{#PHYSDRIVE}",inquiry],#1)<>last(/Arcconf/megaraid["{#PHYSDRIVE}",inquiry],#2))=1'
+                  name: '{#PHYSDRIVE} inquiry data changed'
+                  priority: AVERAGE
+            -
+              uuid: f265c4069b6948c3abef3da1c4821f84
+              name: '{#PHYSDRIVE}: Media Error Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",mediaerror]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Reallocated\sSectors\sCount).*rawValue=\"(.+)\"'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: b9dabff91f12446f8903c2bcb9d8fc20
+                  expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",mediaerror])>0'
+                  name: '{#PHYSDRIVE} has media errors'
+                  priority: HIGH
+            -
+              uuid: 3860abf579cd4133b37ac547b5239e5e
+              name: '{#PHYSDRIVE}: Other Error Count'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",othererror]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(UltraDMA\sCRC\sError\sCount).*rawValue=\"(.+)\"'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 40a115c6aca14e38b99613472fa5fece
+                  expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",othererror])>0'
+                  name: '{#PHYSDRIVE} has other errors'
+                  priority: HIGH
+            -
+              uuid: d117fb63faeb41d3be170bcefc573f27
+              name: '{#PHYSDRIVE}: S.M.A.R.T. alert'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",smart]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(S\.M\.A\.R\.T\.)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: dd62a474401d4563a06cb6463651dc0a
+                  expression: 'find(/Arcconf/megaraid["{#PHYSDRIVE}",smart],,"like","No")=0'
+                  name: '{#PHYSDRIVE} has flagged as S.M.A.R.T. alert'
+                  priority: HIGH
+            -
+              uuid: 1a1d48bb8f3641bfa388677c47bab806
+              name: '{#PHYSDRIVE}: Firmware state'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(State)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 2c977c5e596d4c77b910129c329706be
+                  expression: |
+                    find(/Arcconf/megaraid["{#PHYSDRIVE}",state],,"like","Online")=0 and find(/Arcconf/megaraid["{#PHYSDRIVE}",state],,"like","Hotspare")=0 and 
+                    find(/Arcconf/megaraid["{#PHYSDRIVE}",state],,"like","JBOD")=0
+                  name: '{#PHYSDRIVE} state is not online'
+                  priority: DISASTER
+            -
+              uuid: b3f7e94ab36649db8aae13bdb39366ba
+              name: '{#PHYSDRIVE}: Temperature'
+              type: DEPENDENT
+              key: 'megaraid["{#PHYSDRIVE}",temperature]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Current\sInternal\sTemperature).*rawValue=\"(.+)\"'
+                    - \2
+              master_item:
+                key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: f51f05288aad40d59c940c4aa0472ec4
+                  expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",temperature])>60'
+                  name: '{#PHYSDRIVE} temperature is critical'
+                  priority: DISASTER
+                -
+                  uuid: df4d0b19ac024b4fb1dc65a0d5066696
+                  expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",temperature])>50'
+                  name: '{#PHYSDRIVE} temperature is high'
+                  priority: DISASTER
+                  dependencies:
+                    -
+                      name: '{#PHYSDRIVE} temperature is critical'
+                      expression: 'last(/Arcconf/megaraid["{#PHYSDRIVE}",temperature])>60'
+            -
+              uuid: 69ee1617c54f43b684a1e66eefb86b3e
+              name: '{#PHYSDRIVE}: status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,phys,{#PHYSDRIVE}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+        -
+          uuid: bc42b76b5161485fbfe81d1be8903f18
+          name: 'Virtual disks discovery'
+          type: ZABBIX_ACTIVE
+          key: 'megaraid[list,virt]'
+          delay: 12h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: 79ea9b44009d410f99278c8b898f43cd
+              name: '{#VIRTDRIVE}: bad blocks'
+              type: DEPENDENT
+              key: 'megaraid["{#VIRTDRIVE}",badblocks]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Failed\sstripes)\s+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: 7e069f3485374561a5a5df11c79900db
+                  expression: 'find(/Arcconf/megaraid["{#VIRTDRIVE}",badblocks],,"like","No")=0'
+                  name: '{#VIRTDRIVE} has bad blocks'
+                  priority: DISASTER
+            -
+              uuid: 99bcab4fa0a9493a9833d3e5cb97de85
+              name: '{#VIRTDRIVE}: state'
+              type: DEPENDENT
+              key: 'megaraid["{#VIRTDRIVE}",state]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(Status).+[:]\s+(.+)'
+                    - \2
+              master_item:
+                key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              tags:
+                -
+                  tag: Application
+                  value: Raid
+              trigger_prototypes:
+                -
+                  uuid: c00958b98c3247a5b345a9251058199b
+                  expression: 'find(/Arcconf/megaraid["{#VIRTDRIVE}",state],,"like","Optimal")=0'
+                  name: '{#VIRTDRIVE} state is not optimal'
+                  priority: DISASTER
+            -
+              uuid: 16d99d2bc88346f7bcd9f9fc81291c10
+              name: '{#VIRTDRIVE}: status'
+              type: ZABBIX_ACTIVE
+              key: 'megaraid[get,virt,{#VIRTDRIVE}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal

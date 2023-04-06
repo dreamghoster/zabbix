@@ -1,0 +1,596 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-04-06T10:46:49Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: f82d570e532b4c0b901ae5cfdec45075
+      template: Smartctl
+      name: Smartctl
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 9cf181bafab142ca9806620ad545c1ce
+          name: 'HDD discovery'
+          type: ZABBIX_ACTIVE
+          key: 'smart[list,hdd]'
+          delay: 12h
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 11dfa9538e7544f2b141113ad6211792
+              name: '{#DISKNAME}: ID 197 Current pending sector count'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Current_pending_sector]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '197 Current_Pending_Sector.+ ([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 02564e75df4242a88e12b7a99e2d1602
+                  expression: 'last(/Smartctl/smarth["{#DISKNAME}",Current_pending_sector])>0'
+                  name: '{#DISKNAME}: SMART 197 Current Pending Sector counter incremented'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SMART 05 Reallocated Sectors Count has been registered'
+                      expression: '(max(/Smartctl/smarth["{#DISKNAME}",Reallocated],14d)-min(/Smartctl/smarth["{#DISKNAME}",Reallocated],14d))>0'
+                    -
+                      name: '{#DISKNAME}: SMART test status: FAILED!'
+                      expression: 'find(/Smartctl/smarth["{#DISKNAME}",test],,"like","FAILED!")=1'
+            -
+              uuid: ddf9d9d353674d959d42654f6b7886b4
+              name: '{#DISKNAME}: Device model'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Device_model]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:Vendor: +(.+)\nProduct:|[Dd]evice [Mm]odel:|[Mm]odel [Nn]umber:) +(.+)'
+                    - \2
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+            -
+              uuid: 83adfc53de124427b3a25ae39aef95b5
+              name: '{#DISKNAME}: ID 198 Uncorrectable errors count'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Offline_uncorrectable]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - 'Offline_Uncorrectable.+ ([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: cac1c49513fe4717be5df2f1ea86178a
+                  expression: '(max(/Smartctl/smarth["{#DISKNAME}",Offline_uncorrectable],14d)-min(/Smartctl/smarth["{#DISKNAME}",Offline_uncorrectable],14d))>0'
+                  name: '{#DISKNAME}: SMART 198 Offline Uncorrectable Sector Count has been registered'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SMART test status: FAILED!'
+                      expression: 'find(/Smartctl/smarth["{#DISKNAME}",test],,"like","FAILED!")=1'
+            -
+              uuid: f331e7e0d6f6428e92e1a09234477227
+              name: '{#DISKNAME}: ID 9 Power on hours'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Power_On]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              units: s
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:Power_On_Hours.+ |Accumulated power on time, hours:minutes |Power On Hours:.+ )([0-9]+)'
+                    - \1
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '3600'
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+            -
+              uuid: 3c212e3bb18547a984832638e47a24c8
+              name: '{#DISKNAME}: ID 5 Reallocated sectors count'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Reallocated]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:5 Reallocate.+|Elements in grown defect list:.+)([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 60db44074e91432c85f852a6890b1e2b
+                  expression: '(max(/Smartctl/smarth["{#DISKNAME}",Reallocated],14d)-min(/Smartctl/smarth["{#DISKNAME}",Reallocated],14d))>0'
+                  name: '{#DISKNAME}: SMART 05 Reallocated Sectors Count has been registered'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SMART test status: FAILED!'
+                      expression: 'find(/Smartctl/smarth["{#DISKNAME}",test],,"like","FAILED!")=1'
+            -
+              uuid: 02e0301e3955435dbed3960c18ff943f
+              name: '{#DISKNAME}: Device Serial Number'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Serial]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '[Ss]erial [Nn]umber: +(.+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 8c883eb959f54680abf9de2ec2a052c2
+                  expression: '(last(/Smartctl/smarth["{#DISKNAME}",Serial],#1)<>last(/Smartctl/smarth["{#DISKNAME}",Serial],#2))=1 and length(last(/Smartctl/smarth["{#DISKNAME}",Serial]))>0'
+                  name: '{#DISKNAME}: Disk has been replaced (new serial number received)'
+                  priority: INFO
+                  manual_close: 'YES'
+            -
+              uuid: 29dcaed327e140f6af80b5e4361c118a
+              name: '{#DISKNAME}: ID 10 Spin retry count'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Spin_retry_count]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '10 Spin_Retry_Count.+ ([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 10d3ebf56be24a9683a0c721b5b73c86
+                  expression: '(max(/Smartctl/smarth["{#DISKNAME}",Spin_retry_count],14d)-min(/Smartctl/smarth["{#DISKNAME}",Spin_retry_count],14d))>0'
+                  name: '{#DISKNAME}: SMART 10 Spin Retry Count has been registered'
+                  priority: AVERAGE
+                  description: |
+                    1. Bad contact with power supply
+                    2. Power supply voltage is too low
+                    3. HDD problems
+                  manual_close: 'YES'
+            -
+              uuid: f15ca2ee5243421f8aa0084bc20fe433
+              name: '{#DISKNAME}: ID 190/194 Temperature'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",Temperature]'
+              delay: '0'
+              history: 30d
+              units: °С
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:194 Temperature[^(\n]+|Airflow_Temperature[^(\n]+|Drive Temperature:|Temperature:) +([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: edf5d4df42ff401aa3b14a16a5a7dd5e
+                  expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])>65'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])<60'
+                  name: '{#DISKNAME}: Disk temperature: {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+                -
+                  uuid: 3677aae5e77544f1b50699cdd1275087
+                  expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])>50'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])<45'
+                  name: '{#DISKNAME}: Disk temperature too high: {ITEM.LASTVALUE}'
+                  priority: WARNING
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: Disk temperature: {ITEM.LASTVALUE}'
+                      expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])>65'
+                      recovery_expression: 'last(/Smartctl/smarth["{#DISKNAME}",Temperature])<60'
+            -
+              uuid: bd6dbd9e0fb24c21a651445a285891d1
+              name: '{#DISKNAME}: Test result'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",test]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:SMART overall-health self-assessment test result:|SMART Health Status:) +(.+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 1693ede5e7e944b5b41453ee87c4feb4
+                  expression: 'find(/Smartctl/smarth["{#DISKNAME}",test],,"like","FAILED!")=1'
+                  name: '{#DISKNAME}: SMART test status: FAILED!'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+            -
+              uuid: c50e683849b247d785978581a4666931
+              name: '{#DISKNAME}: ID 199 CRC error count'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",UDMA_CRC_Error]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:UDMA_CRC_Error|CRC_Error_Count|Non-medium error count:|Media and Data Integrity Errors:).+ ([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,hdd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 9364b6cbda294de0a946f9596a007e95
+                  expression: '(max(/Smartctl/smarth["{#DISKNAME}",UDMA_CRC_Error],1d)-min(/Smartctl/smarth["{#DISKNAME}",UDMA_CRC_Error],1d))>0 and last(/Smartctl/smarth["{#DISKNAME}",UDMA_CRC_Error])>100'
+                  name: '{#DISKNAME}: SMART 199 UltraDMA CRC Error Count too high: {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+                  description: 'Problems with interface cable, reconnect from both sides or change.'
+                  manual_close: 'YES'
+            -
+              uuid: 99cf6c5d90764f529b37abbc3c89eb9d
+              name: '{#DISKNAME}: smartctl'
+              type: ZABBIX_ACTIVE
+              key: 'smart[get,hdd,{#DISKNAME}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal
+        -
+          uuid: 2f944b20451b4f489405c1453b3c1f7a
+          name: 'SSD discovery'
+          type: ZABBIX_ACTIVE
+          key: 'smart[list,ssd]'
+          delay: 12h
+          lifetime: 3d
+          item_prototypes:
+            -
+              uuid: 039e06eeee514bc0a8dc302539e4cfb3
+              name: '{#DISKNAME}: ID 177/202/233 SSD wearout'
+              type: DEPENDENT
+              key: 'smarth["{#DISKNAME}",wearout]'
+              delay: '0'
+              history: 30d
+              units: '%'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:(?:177 Wear_Leveling_Count|202 Percent_Lifetime_Used|233 Media_Wearout_Indicator|231 SSD_Life_Left) +0x[0-9a-z]+|Available Spare:) +([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: af40659508044d12a7cb86acc311b219
+                  expression: 'last(/Smartctl/smarth["{#DISKNAME}",wearout])<5'
+                  name: '{#DISKNAME}: SSD wearout (<5% left)'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                -
+                  uuid: 6f54f94435bd48f9b0de73ee0e5b5a6c
+                  expression: 'last(/Smartctl/smarth["{#DISKNAME}",wearout])<=15'
+                  name: '{#DISKNAME}: SSD wearout (<15% left)'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SSD wearout (<5% left)'
+                      expression: 'last(/Smartctl/smarth["{#DISKNAME}",wearout])<5'
+            -
+              uuid: e796f03cc0ab4efc80764c95ac8ce2b4
+              name: '{#DISKNAME}: Device model'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",Device_model]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:Vendor: +(.+)\nProduct:|[Dd]evice [Mm]odel:|[Mm]odel [Nn]umber:) +(.+)'
+                    - \2
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+            -
+              uuid: 5720fc1201b541b980bfa899639a1252
+              name: '{#DISKNAME}: ID 9 Power on hours'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",Power_On]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              units: s
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:Power_On_Hours.+ |Accumulated power on time, hours:minutes |Power On Hours:.+ )([0-9]+)'
+                    - \1
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '3600'
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+            -
+              uuid: b6bb796d51d4468884827c693f5bc468
+              name: '{#DISKNAME}: ID 5 Reallocated sectors count'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",Reallocated]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:5 Reallocate.+|196 Reallocate.+|Elements in grown defect list:.+)([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: ba05d059d1984d84888f0c81ad0b805e
+                  expression: '(max(/Smartctl/smarts["{#DISKNAME}",Reallocated],14d)-min(/Smartctl/smarts["{#DISKNAME}",Reallocated],14d))>0'
+                  name: '{#DISKNAME}: SMART 05 Reallocated Sectors Count has been registered'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SMART test status: FAILED!'
+                      expression: 'find(/Smartctl/smarts["{#DISKNAME}",test],,"like","FAILED!")=1'
+            -
+              uuid: 76bbe55f3f4c49b9b01bf3dca71c5130
+              name: '{#DISKNAME}: Device Serial Number'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",Serial]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '[Ss]erial [Nn]umber: +(.+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 7593498a393e4c1e96e4162a5b95f68f
+                  expression: '(last(/Smartctl/smarts["{#DISKNAME}",Serial],#1)<>last(/Smartctl/smarts["{#DISKNAME}",Serial],#2))=1 and length(last(/Smartctl/smarts["{#DISKNAME}",Serial]))>0'
+                  name: '{#DISKNAME}: Disk has been replaced (new serial number received)'
+                  priority: INFO
+                  manual_close: 'YES'
+            -
+              uuid: 1586d0bb17844720a61071d4cea7e032
+              name: '{#DISKNAME}: ID 190/194 Temperature'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",Temperature]'
+              delay: '0'
+              history: 30d
+              units: °C
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:194 Temperature[^(\n]+|Airflow_Temperature[^(\n]+|Drive Temperature:|Temperature:) +([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: ef1581f16c504f5dbc51a736de6d4214
+                  expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])>50'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])<45'
+                  name: '{#DISKNAME}: Disk temperature: {ITEM.LASTVALUE}'
+                  priority: WARNING
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: Disk temperature: {ITEM.LASTVALUE}'
+                      expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])>65'
+                      recovery_expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])<60'
+                -
+                  uuid: 3da89a801f1e44a9855614fa2667f203
+                  expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])>65'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Smartctl/smarts["{#DISKNAME}",Temperature])<60'
+                  name: '{#DISKNAME}: Disk temperature: {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+            -
+              uuid: 1cfc5578093248da94acb3c57f880bfe
+              name: '{#DISKNAME}: Test result'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",test]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:SMART overall-health self-assessment test result:|SMART Health Status:) +(.+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: 1a274b8b00bf49cb996833b17817ce31
+                  expression: 'find(/Smartctl/smarts["{#DISKNAME}",test],,"like","FAILED!")=1'
+                  name: '{#DISKNAME}: SMART test status: FAILED!'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+            -
+              uuid: c8b99d89ca774110b8dd95ea968f6279
+              name: '{#DISKNAME}: ID 199 CRC error count'
+              type: DEPENDENT
+              key: 'smarts["{#DISKNAME}",UDMA_CRC_Error]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              preprocessing:
+                -
+                  type: REGEX
+                  parameters:
+                    - '(?:UDMA_CRC_Error|CRC_Error_Count|Non-medium error count:|Media and Data Integrity Errors:).+ ([0-9]+)'
+                    - \1
+              master_item:
+                key: 'smart[get,ssd,{#DISKNAME}]'
+              tags:
+                -
+                  tag: Application
+                  value: Smart
+              trigger_prototypes:
+                -
+                  uuid: c950e8517b154536b169e2ea4e0e2d93
+                  expression: '(max(/Smartctl/smarts["{#DISKNAME}",UDMA_CRC_Error],1d)-min(/Smartctl/smarts["{#DISKNAME}",UDMA_CRC_Error],1d))>0 and last(/Smartctl/smarts["{#DISKNAME}",UDMA_CRC_Error])>100'
+                  name: '{#DISKNAME}: SMART 198 Offline Uncorrectable Sector Count has been registered'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    -
+                      name: '{#DISKNAME}: SMART test status: FAILED!'
+                      expression: 'find(/Smartctl/smarts["{#DISKNAME}",test],,"like","FAILED!")=1'
+            -
+              uuid: 477c4786909b4ba995b032ee483359c3
+              name: '{#DISKNAME}: smartctl'
+              type: ZABBIX_ACTIVE
+              key: 'smart[get,ssd,{#DISKNAME}]'
+              delay: 1h
+              history: 12h
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Internal

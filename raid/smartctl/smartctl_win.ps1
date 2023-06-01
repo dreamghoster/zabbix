@@ -7,6 +7,7 @@ if ($args[0] -eq "list") {
 	$smart_scanresults = & $smartctl "--scan-open"
 	$disklist = @()
 	$result = @()
+	$resultcounter = 0
 	#filter disks by name
 	foreach ($smart_scanresult in $smart_scanresults) {
 		$disklist += ($smart_scanresult -split " ")[0]
@@ -48,11 +49,16 @@ if ($args[0] -eq "list") {
 				} else { 
 					$result += $smartserial
 					$json = ""
+					if ($resultcounter -ne 0) 
+					{
+						write-host ","
+					}
 					$json += "`t {`n " +
 					"`t`t`"{#DISKNAME}`":`""+$disk+"`""+ ",`n" +
 					"`t`t`"{#DISKTYPE}`":`""+$args[1]+"`""+ "`n" +
 					"`t }"  		
 					write-host $json
+					$resultcounter = $resultcounter + 1
 				}
 			}		
 		}			
